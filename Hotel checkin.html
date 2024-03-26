@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check-in Hotel</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-image: url(pantai.jpg);
+    background-size: cover;
+    background-position: center;
+    margin: 0; /* Menghapus margin bawaan browser */
+    padding: 0; /* Menghapus padding bawaan browser */
+  }
+
+  h2 {
+    text-align: center;
+    color: rgb(252, 182, 174);
+    text-shadow: 2px 2px 2px rgba(0,0,0,0.5);
+    font-weight: bold;
+    font-size: 36px;
+    margin-top: 20px; /* Menambahkan margin atas */
+  }
+
+  form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  background-color: rgba(249, 249, 249, 0.8); /* Menambahkan transparansi */
+  opacity: 0.8; /* Menambahkan tingkat transparansi */
+  font-weight: bold;
+}
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"], /* Menambahkan input untuk waktu */
+  button {
+    width: calc(100% - 18px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  button {
+    background-color: rgb(243, 154, 145);
+    color: white;
+    cursor: pointer;;
+  }
+
+  button:hover {
+    background-color: rgb(221, 89, 74);
+  }
+
+  input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="date"]:hover,
+input[type="time"]:hover {
+  border-color: salmon; /* Mengubah warna border saat hover */
+}
+  .popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+  }
+
+  .popup-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+  }
+
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  #clock { 
+    font-weight: bold;
+    border-radius: 50px;
+    border: 2px solid rgb(255, 161, 150);
+    color: rgb(77, 230, 179);
+  }
+  .intro-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+}
+
+.intro-content {
+  text-align: center;
+  color: #fff;
+}
+
+.intro-content h2 {
+  font-size: 24px;
+}
+
+.intro-content p {
+  margin-bottom: 20px;
+}
+
+.intro-content button {
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+@keyframes buttonAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.button-animation {
+  animation: buttonAnimation 0.5s ease;
+}
+
+</style>
+</head>
+<body>
+  <div class="intro-overlay" id="introOverlay">
+    <div class="intro-content">
+      <h2>WELCOME!</h2>
+      <p>Selamat datang di website kami. Nikmati pengalaman menginap yang menyenangkan di hotel kami.</p>
+      <button onclick="closeIntro()">Mulai</button>
+    </div>
+  </div>
+<h2>Aboy's Hotel & resort</h2>
+<div id="clock" style="position: fixed; top: 10px; right: 10px; padding: 5px; "></div>
+
+<form id="checkinForm">
+  <label for="nama">Nama:</label><br>
+  <input type="text" id="nama" name="nama"><br>
+  <label for="nomor_kamar" oncontextmenu="getRoomInfo(nomorKamar)">Nomor Kamar:</label><br>
+  <input type="number" id="nomor_kamar" name="nomor_kamar"><br>
+  <label for="tanggal_checkin">Tanggal Check-in:</label><br>
+  <input type="date" id="tanggal_checkin" name="tanggal_checkin"><br>
+  <label for="waktu_checkin">Waktu Check-in:</label><br>
+  <input type="time" id="waktu_checkin" name="waktu_checkin"><br>
+  <label for="tanggal_checkout">Tanggal Check-out:</label><br>
+  <input type="date" id="tanggal_checkout" name="tanggal_checkout"><br>
+  <label for="waktu_checkout">Waktu Check-out:</label><br>
+  <input type="time" id="waktu_checkout" name="waktu_checkout"><br>
+  <button type="button" onclick="checkIn()" id="popupBTN">Check-in</button>
+  <div class="popup" id="popup">
+    <div class="popup-content">
+      <span class="close">&times;</span>
+      <p></p>
+    </div>
+  </div>
+</form>
+
+<script>
+const popup = document.getElementById('popup');
+
+document.addEventListener('click', (event) => {
+  if (event.target.classList.contains('close') || event.target === popup) {
+    popup.style.display = 'none';
+    document.getElementById('nama').value = '';
+    document.getElementById('nomor_kamar').value = '';
+    document.getElementById('tanggal_checkin').value = '';
+    document.getElementById('waktu_checkin').value = '';
+    document.getElementById('tanggal_checkout').value = '';
+    document.getElementById('waktu_checkout').value = '';
+  }
+});
+
+function getRoomInfo(nomorKamar) {
+  var roomInfo = {
+    jenis: '',
+    harga: 0
+  };
+
+  if (nomorKamar >= 1 && nomorKamar <= 20) {
+    roomInfo.jenis = 'Kamar Standar';
+    roomInfo.harga = 90;
+  } else if (nomorKamar >= 21 && nomorKamar <= 40) {
+    roomInfo.jenis = 'Kamar Semi VIP';
+    roomInfo.harga = 120;
+  } else if (nomorKamar >= 41 && nomorKamar <= 50) {
+    roomInfo.jenis = 'Kamar VIP (dengan fasilitas gym dan kolam renang)';
+    roomInfo.harga = 150;
+  } else {
+    roomInfo.jenis = 'Kamar Tidak Valid';
+    roomInfo.harga = 0;
+  }
+
+  return roomInfo
+}
+
+function checkIn() {
+  var nama = document.getElementById("nama").value;
+  var nomorKamar = parseInt(document.getElementById("nomor_kamar").value);
+  var tanggalCheckin = document.getElementById("tanggal_checkin").value;
+  var waktuCheckin = document.getElementById("waktu_checkin").value;
+  var tanggalCheckout = document.getElementById("tanggal_checkout").value;
+  var waktuCheckout = document.getElementById("waktu_checkout").value;
+
+  if (nama && nomorKamar && tanggalCheckin && waktuCheckin && tanggalCheckout && waktuCheckout) {
+    var roomInfo = getRoomInfo(nomorKamar);
+    if (roomInfo.harga > 0) {
+      var biaya = hitungBiaya(tanggalCheckin, waktuCheckin, tanggalCheckout, waktuCheckout, roomInfo.harga);
+      var popupContent = document.querySelector('.popup-content');
+      var deskripsi = "Selamat datang, " + nama + "!" + "<br><br>" + 
+                      "Kunci kamar " + nomorKamar + " telah diberikan." + "<br><br>" + 
+                      "Total biaya: $" + biaya + "<br><br>" +
+                      "Deskripsi Kamar:" + "<br>" +
+                      roomInfo.jenis + "<br><br>" +
+                      "Jadwal Check-out:" + "<br>" +
+                      "Anda diharapkan check-out sebelum pukul " + waktuCheckout + " pada tanggal " + tanggalCheckout + "." + "<br>" 
+                      + "Selamat menikmati liburan";
+      popupContent.innerHTML = "<span class='close'>&times;</span><p style='white-space: pre-line;'>" + deskripsi + "</p>";
+      popup.style.display = 'block';
+    } else {
+      alert("Maaf, nomor kamar tidak valid.");
+    }
+  } else {
+    alert("Mohon lengkapi semua data terlebih dahulu.");
+  }
+}
+
+
+
+
+function hitungBiaya(checkinDate, checkinTime, checkoutDate, checkoutTime, harga) {
+  var checkinDateTime = new Date(checkinDate + ' ' + checkinTime);
+  var checkoutDateTime = new Date(checkoutDate + ' ' + checkoutTime);
+  var durasiMalam = Math.ceil((checkoutDateTime - checkinDateTime) / (1000 * 60 * 60 * 24));
+  var totalBiaya = harga * durasiMalam;
+
+  return totalBiaya;
+}
+
+
+function kamarTersedia(nomorKamar) {
+  return true;
+}
+
+
+function displayTime() {
+  var now = new Date();
+  var hours = now.getHours();
+  var minutes = now.getMinutes();
+  var seconds = now.getSeconds();
+  var timeString = padZero(hours) + ":" + padZero(minutes) + ":" + padZero(seconds);
+  document.getElementById('clock').textContent = timeString;
+}
+
+function padZero(num) {
+  return (num < 10 ? '0' : '') + num;
+}
+
+// Memanggil fungsi displayTime setiap detik
+setInterval(displayTime, 1000);
+
+// Memanggil fungsi displayTime sekali saat halaman dimuat untuk menampilkan waktu awal
+displayTime();
+document.addEventListener('DOMContentLoaded', function() {
+  const introOverlay = document.getElementById('introOverlay');
+  const visited = localStorage.getItem('visited');
+
+  if (!visited) {
+    introOverlay.style.display = 'flex';
+  }
+});
+
+function closeIntro() {
+  const introOverlay = document.getElementById('introOverlay');
+  introOverlay.style.display = 'none';
+  localStorage.setItem('visited', true);
+}
+
+</script>
+</body>
+</html>
